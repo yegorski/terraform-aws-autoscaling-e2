@@ -41,13 +41,6 @@ resource "aws_security_group" "server" {
     security_groups = ["${aws_security_group.alb.id}"]
   }
 
-  ingress {
-    protocol    = "TCP"
-    from_port   = "22"
-    to_port     = "22"
-    cidr_blocks = ["${var.ssh_ip}/32"]
-  }
-
   egress {
     protocol    = "-1"
     from_port   = 0
@@ -58,4 +51,15 @@ resource "aws_security_group" "server" {
   tags = "${merge(
     map("Name", "${var.app_name}-server"),
     var.tags)}"
+}
+
+resource "aws_security_group_rule" "ssh" {
+  count = "${var.ssh_ip != "" ? 1 : 0}"
+
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = ["${var.ssh_ip}/32"]
+  security_group_id = "${aws_security_group.server.id}"
 }
